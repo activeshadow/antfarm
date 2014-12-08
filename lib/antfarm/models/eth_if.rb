@@ -35,7 +35,7 @@ module Antfarm
       belongs_to :l2_if, :inverse_of => :eth_if
 
       validates :address, :presence => true,
-                          :format   => { :with => /^([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$/i }
+                          :format   => { :with => /([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}/i }
       validates :l2_if,   :presence => true
     end
   end
