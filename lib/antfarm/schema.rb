@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(:version => 7) do
 
   create_table 'eth_ifs', :force => true do |t|
     t.integer 'l2_if_id', :null => false
-    t.string  'address',  :null => false
+    t.macaddr 'address',  :null => false
     t.string  'custom'
   end
 
@@ -60,7 +60,7 @@ ActiveRecord::Schema.define(:version => 7) do
 
   create_table 'ip_ifs', :force => true do |t|
     t.integer 'l3_if_id',                   :null => false
-    t.string  'address',                    :null => false
+    t.inet    'address',                    :null => false
     t.boolean 'virtual', :default => false, :null => false
     t.string  'custom'
   end
@@ -74,7 +74,7 @@ ActiveRecord::Schema.define(:version => 7) do
   create_table 'ip_nets', :force => true do |t|
     t.integer 'l3_net_id',                        :null => false
     t.integer 'private_net_id'
-    t.string  'address',                          :null => false
+    t.cidr    'address',                          :null => false
     t.boolean 'private',       :default => false, :null => false
     t.string  'custom'
   end
