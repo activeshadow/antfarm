@@ -49,14 +49,14 @@ Gem::Specification.new do |s|
   s.executables  << 'antfarm'
   s.has_rdoc      = false
 
-  s.add_dependency 'activerecord',   '= 3.2.12'
+  s.add_dependency 'activerecord',   '= 4.1.8'
   s.add_dependency 'ipaddress',      '= 0.8.0'
   s.add_dependency 'launchy',        '= 2.1.2'
   s.add_dependency 'packetfu',       '= 1.1.6'
-  s.add_dependency 'pg',             '= 0.14.1'
+  s.add_dependency 'pg',             '= 0.17.1'
   s.add_dependency 'pry',            '= 0.9.12'
   s.add_dependency 'slim',           '= 2.0.2'
-  s.add_dependency 'sqlite3',        '= 1.3.7'
+  s.add_dependency 'sqlite3',        '= 1.3.10'
   s.add_dependency 'terminal-table', '= 1.4.5'
   s.add_dependency 'trollop',        '= 2.0'
 end
