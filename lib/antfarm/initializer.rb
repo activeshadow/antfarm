@@ -83,7 +83,7 @@ module Antfarm
 
       require 'antfarm/errors'
       require 'antfarm/helpers'
-      require 'antfarm/ipaddress_ext'
+      require 'antfarm/ipaddr'
       require 'antfarm/models'
       require 'antfarm/oui_parser'
       require 'antfarm/plugin'
