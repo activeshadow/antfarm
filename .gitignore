@@ -1,3 +1,4 @@
+.bundle
 .rbenv-version
 .ruby-version
 coverage
@@ -5,4 +6,5 @@ doc
 Gemfile.lock
 data
 output
+vendor
 wiki
