@@ -9,6 +9,12 @@ class IPAddrTest < TestCase
   end
 
   test 'correctly modifies prefix length' do
+    addr = IPAddr.new('192.168.1.1')
+    assert_equal 32, addr.prefix
+
+    addr.prefix = 30
+    assert_equal 30, addr.prefix
+    assert_equal '192.168.1.0/30', addr.to_cidr_string
   end
 
   test 'correctly provides CIDR string' do
