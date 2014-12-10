@@ -1,5 +1,8 @@
 require 'simplecov'
-SimpleCov.start { add_filter '/test/' }
+SimpleCov.start do
+  add_filter '/test/'
+  add_filter '/vendor/'
+end
 
 require 'antfarm'
 
