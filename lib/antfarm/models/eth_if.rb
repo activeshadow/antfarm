@@ -32,11 +32,33 @@
 module Antfarm
   module Models
     class EthIf < ActiveRecord::Base
-      belongs_to :l2_if, :inverse_of => :eth_if
+      belongs_to :l2_if
+
+      before_validation :create_l2_if, on: :create
 
       validates :address, :presence => true,
                           :format   => { :with => /([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}/i }
       validates :l2_if,   :presence => true
+
+      #######
+      private
+      #######
+
+      def create_l2_if
+        unless self.l2_if
+          layer2_interface = L2If.new certainty_factor: Antfarm.config.certainty_factor
+          if layer2_interface.save
+            Antfarm.log :info, 'EthIf: Created Layer 2 Interface'
+          else
+            Antfarm.log :warn, 'EthIf: Errors occured while creating Layer 2 Interface'
+            layer2_interface.errors.full_messages do |msg|
+              Antfarm.log :warn, msg
+            end
+          end
+
+          self.l2_if = layer2_interface
+        end
+      end
     end
   end
 end
