@@ -46,12 +46,12 @@ class CiscoIOSTest < TestCase
 
     assert_equal 4, Antfarm::Models::L3Net.count
 
-    assert Antfarm::Models::L3Net.network_addressed('10.0.1.0/24')
-    assert Antfarm::Models::L3Net.network_addressed('10.0.2.0/24')
-    assert Antfarm::Models::L3Net.network_addressed('10.0.3.0/24')
-    assert Antfarm::Models::L3Net.network_addressed('192.168.0.0/24')
+    assert Antfarm::Models::IPNet.network_addressed('10.0.1.0/24')
+    assert Antfarm::Models::IPNet.network_addressed('10.0.2.0/24')
+    assert Antfarm::Models::IPNet.network_addressed('10.0.3.0/24')
+    assert Antfarm::Models::IPNet.network_addressed('192.168.0.0/24')
 
-    router = Antfarm::Models::L3If.interface_addressed('10.0.2.1')
-    assert router.l2_if.node.tags.map(&:name).include?('router')
+    router = Antfarm::Models::IPIf.find_by(address: '10.0.2.1')
+    assert router.l3_if.l2_if.node.tags.map(&:name).include?('router')
   end
 end
