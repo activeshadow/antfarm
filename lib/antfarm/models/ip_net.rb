@@ -88,14 +88,14 @@ module Antfarm
       # exists.
       def self.network_containing(ip_net)
         ip_net  = IPAddr.new(ip_net) if ip_net.is_a?(String)
-        ip_nets = IPNet.where("address >> ?", ip_net.to_cidr_string)
+        ip_nets = IPNet.where("address >>= ?", ip_net.to_cidr_string)
         return ip_nets.first # TODO: what if there's more than one?
       end
 
       # Find any IP networks that are sub_networks of the given network.
       def self.networks_contained_within(ip_net)
         ip_net = IPAddr.new(ip_net) if ip_net.is_a?(String)
-        return IPNet.where("address << ?", ip_net.to_cidr_string)
+        return IPNet.where("address <<= ?", ip_net.to_cidr_string)
       end
 
       def create_l3_net
