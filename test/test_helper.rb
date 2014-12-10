@@ -22,8 +22,7 @@ class TestCase < Minitest::Test
   def setup
     ActiveRecord::Migration.suppress_messages do
       load 'antfarm/schema.rb'
-      Dir["#{Antfarm.root}/lib/antfarm/plugins/*/**/schema.rb"].each  { |file| load file }
-      Dir["#{Antfarm::Helpers.user_plugins_dir}/*/**/schema.rb"].each { |file| load file }
+      Dir["#{Antfarm.root}/lib/antfarm/plugins/*/**/schema.rb"].each { |file| load file }
     end
   end
 end
