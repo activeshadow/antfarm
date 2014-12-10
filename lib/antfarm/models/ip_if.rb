@@ -54,7 +54,7 @@ module Antfarm
     #      Antfarm::Models::IPIf.new(:address => '192.168.0.100')
     #    end
     class IPIf < ActiveRecord::Base
-      belongs_to :l3_if #, inverse_of: :ip_if
+      belongs_to :l3_if
 
       before_validation :create_l3_if, on: :create
 
@@ -66,10 +66,9 @@ module Antfarm
       # therein causing recursion since the `associate_l3_net` method is called
       # once again.
       after_create :create_ip_net
-#     after_create :associate_l3_net
 
-      validates :address, :presence => true
-      validates :l3_if,   :presence => true
+      validates :address, presence: true, uniqueness: true
+      validates :l3_if,   presence: true
 
       # Validate data for requirements before saving interface to the database.
       #
@@ -81,15 +80,18 @@ module Antfarm
         if value and value.loopback?
           record.errors.add(attr, 'loopback address not allowed')
         end
+      end
 
-=begin
-        if interface = IPIf.find_by_address(value)
-          interface.update_attribute :address, value
-          message = "#{value} already exists, but a new IP Network was created"
-          record.errors.add(:address, message)
-          Antfarm.log :info, message
+      def address=(address)
+        unless address.nil?
+          addr, @prefix = address.split('/')
+          @prefix ||= 32
+          write_attribute(:address, addr)
         end
-=end
+      end
+
+      def network
+        IPNet.network_containing(self.address)
       end
 
       #######
@@ -102,30 +104,16 @@ module Antfarm
       def create_ip_net
         # Check to see if a network exists that contains this address.
         # If not, create a small one that does.
-        unless IPNet.network_containing(self.address.to_cidr_string)
-          if self.address.prefix == 32 # no subnet data provided
-            self.address.prefix = Antfarm.config.prefix # defaults to /30
-
-            # address for this interface shouldn't be a network address...
-            if self.address == self.address.network
-              self.address.prefix = Antfarm.config.prefix - 1
-            end
-
+        unless IPNet.network_containing("#{self.address}/#{@prefix}")
+          if @prefix == 32 # no subnet data provided
+            @prefix = Antfarm.config.prefix # defaults to /30
             certainty_factor = Antfarm::CF_LIKELY_FALSE
           else
             certainty_factor = Antfarm::CF_PROVEN_TRUE
           end
 
-          IPNet.create address: self.address.network.to_cidr_string
-        end
-      end
-
-      # Based on the current value of the <tt>address</tt> attribute, checks to
-      # see if an existing L3 Network would contain the IP address. If so, this
-      # model is associated with the L3 Network.
-      def associate_l3_net
-        if layer3_network = L3Net.network_containing(self.address)
-          self.l3_if.update_attribute :l3_net, layer3_network
+          IPNet.create address: "#{self.address}/#{@prefix}"
+          Antfarm.log :info, 'IPIf: Created Layer 3 Network'
         end
       end
 
