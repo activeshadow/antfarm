@@ -35,9 +35,11 @@ module Antfarm
       has_many :tags,   as: :taggable
       has_one  :ip_net, class_name: 'IPNet', dependent: :destroy
 
+      accepts_nested_attributes_for :ip_net
+
       before_save :clamp_certainty_factor
 
-      validates :certainty_factor, :presence => true
+      validates :certainty_factor, presence: true
 
       #######
       private

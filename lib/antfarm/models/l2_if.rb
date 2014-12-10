@@ -32,19 +32,17 @@
 module Antfarm
   module Models
     class L2If < ActiveRecord::Base
-      has_many :tags, :as => :taggable
-      has_many :l3_ifs, :inverse_of => :l2_if, :dependent => :destroy
+      has_many :tags,   as: :taggable
+      has_many :l3_ifs, dependent: :destroy
+      has_one  :eth_if, dependent: :destroy
 
-      has_one :eth_if, :inverse_of => :l2_if, :dependent => :destroy
-
-      belongs_to :node, :inverse_of => :l2_ifs
+      belongs_to :node
 
       accepts_nested_attributes_for :l3_ifs
       accepts_nested_attributes_for :eth_if
 
       before_save :clamp_certainty_factor
 
-      validates :node,             :presence => true
       validates :certainty_factor, :presence => true
 
       # Find and return the layer 2 interface with the given ethernet address.
