@@ -103,26 +103,26 @@ module Antfarm
 
           interfaces.uniq!
 
-          node = Antfarm::Models::Node.find_or_create_by_name!(
-            :name => hostname, :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-            :tags => [
-              Antfarm::Models::Tag.new(:name => 'router'),
-              Antfarm::Models::Tag.new(:name => 'Cisco'),
-              Antfarm::Models::Tag.new(:name => 'PIX'),
-              Antfarm::Models::Tag.new(:name => 'ASA')
-            ]
+          node = Antfarm::Models::Node.find_or_create_by!(
+            :name => hostname, :certainty_factor => Antfarm::CF_PROVEN_TRUE
           )
+
+          node.tags.find_or_create_by name: 'router'
+          node.tags.find_or_create_by name: 'Cisco'
+          node.tags.find_or_create_by name: 'PIX'
+          node.tags.find_or_create_by name: 'ASA'
 
           interfaces.each do |address|
             Antfarm.output "  Creating IP interface for #{address} based on interface configuration."
 
-            iface = Antfarm::Models::L3If.interface_addressed(address)
+            addr  = address.split('/')
+            iface = Antfarm::Models::IPIf.find_by(address: addr)
 
             if iface
               Antfarm.output "  Found an existing interface with address #{address}."
               Antfarm.output '  Updating its associated node.'
 
-              node.merge_from(iface.l2_if.node)
+              node.merge_from(iface.l3_if.l2_if.node)
             else
               node.l2_ifs.create(
                 :certainty_factor => Antfarm::CF_LIKELY_TRUE,
@@ -140,11 +140,12 @@ module Antfarm
             addresses.each do |address|
               Antfarm.output "  Creating IP interface for #{address[1]} based on #{address[0]} entry."
 
-              iface = Antfarm::Models::L3If.interface_addressed(address[1])
+              addr  = address[1].split('/')
+              iface = Antfarm::Models::IPIf.find_by(address: addr)
 
               if iface
                 Antfarm.output "  Record already exists for #{address[1]}."
-                node = iface.l2_if.node
+                node = iface.l3_if.l2_if.node
                 unless node.tags.include?(address[0])
                   node.tags << Antfarm::Models::Tag.new(:name => address[0])
                 end
@@ -164,15 +165,14 @@ module Antfarm
             networks.each do |network|
               Antfarm.output "  Creating IP network for #{network} based on network object entry."
 
-              l3net = Antfarm::Models::L3Net.network_addressed(network)
+              ip_net = Antfarm::Models::IPNet.network_addressed(network)
 
-              if l3net
+              if ip_net
                 Antfarm.output "  Record already exists for #{network}."
               else
-                Antfarm::Models::L3Net.create!(
-                  :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                  :ip_net_attributes => { :address => network }
-                )
+                Antfarm.execute_with_certainty_factor(Antfarm::CF_PROVEN_TRUE) do
+                  Antfarm::Models::IPNet.create!(address: network)
+                end
               end
             end
           end
