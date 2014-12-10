@@ -29,67 +29,52 @@
 #                                                                              #
 ################################################################################
 
-ActiveRecord::Schema.define(:version => 7) do
+ActiveRecord::Schema.define(:version => 1) do
   create_table 'nodes', :force => true do |t|
     t.float  'certainty_factor', :null => false
     t.string 'name'
     t.string 'device_type'
-    t.string 'custom'
   end
 
   create_table 'l2_ifs', :force => true do |t|
-    t.integer 'node_id',          :null => false
+    t.integer 'node_id'
     t.float   'certainty_factor', :null => false
     t.string  'media_type'
-    t.string  'custom'
   end
 
   create_table 'eth_ifs', :force => true do |t|
     t.integer 'l2_if_id', :null => false
     t.macaddr 'address',  :null => false
-    t.string  'custom'
   end
 
   create_table 'l3_ifs', :force => true do |t|
-    t.integer 'l2_if_id',         :null => false
-    t.integer 'l3_net_id'
+    t.integer 'l2_if_id'
     t.float   'certainty_factor', :null => false
     t.string  'protocol'
-    t.string  'custom'
   end
 
   create_table 'ip_ifs', :force => true do |t|
     t.integer 'l3_if_id',                   :null => false
     t.inet    'address',                    :null => false
     t.boolean 'virtual', :default => false, :null => false
-    t.string  'custom'
   end
 
   create_table 'l3_nets', :force => true do |t|
     t.float  'certainty_factor', :null => false
     t.string 'protocol'
-    t.string 'custom'
   end
 
   create_table 'ip_nets', :force => true do |t|
-    t.integer 'l3_net_id',                        :null => false
-    t.integer 'private_net_id'
-    t.cidr    'address',                          :null => false
-    t.boolean 'private',       :default => false, :null => false
-    t.string  'custom'
+    t.integer 'l3_net_id', :null => false
+    t.cidr    'address',   :null => false
   end
 
-  create_table 'private_nets', :force => true do |t|
-    t.string 'description'
-    t.string 'custom'
-  end
-
+=begin
   create_table 'actions', :force => true do |t|
     t.string 'tool'
     t.string 'description'
     t.string 'start'
     t.string 'end'
-    t.string 'custom'
   end
 
   create_table 'os', :force => true do |t|
@@ -97,7 +82,6 @@ ActiveRecord::Schema.define(:version => 7) do
     t.integer 'node_id',          :null => false
     t.float   'certainty_factor', :null => false
     t.text    'fingerprint'
-    t.string  'custom'
   end
 
   create_table 'services', :force => true do |t|
@@ -107,7 +91,6 @@ ActiveRecord::Schema.define(:version => 7) do
     t.string  'protocol'
     t.integer 'port'
     t.text    'name'
-    t.string  'custom'
   end
 
   create_table 'connections', :force => true do |t|
@@ -117,8 +100,8 @@ ActiveRecord::Schema.define(:version => 7) do
     t.integer 'src_port'
     t.integer 'dst_port'
     t.string  'timestamp'
-    t.string  'custom'
   end
+=end
 
   create_table 'tags', :force => true do |t|
     t.string  'name',          :null => false
