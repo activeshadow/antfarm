@@ -25,8 +25,8 @@ class PcapTest < TestCase
 
     conn = Antfarm::Models::Connection.first
 
-    assert_equal src.l3_ifs.first, conn.src
-    assert_equal dst.l3_ifs.first, conn.dst
+    assert_equal src.l3_ifs.first.ip_if, conn.src
+    assert_equal dst.l3_ifs.first.ip_if, conn.dst
 
     assert_equal 502, conn.dst_port
   end
