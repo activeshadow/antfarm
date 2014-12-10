@@ -106,6 +106,7 @@ when 'console'
   Pry.config.prompt_name  = 'console'
   Pry.config.history.file = Antfarm::Helpers.history_file
 
+  # TODO: what was I up to here?
   Antfarm.plugins.each do |name,plugin|
     Pry::Commands.block_command name, plugin.info[:desc] do |opts|
     end
