@@ -61,7 +61,7 @@ module Antfarm
             src = nil
             dst = nil
 
-            if s_ip_iface = Antfarm::Models::IPIf.find_by_address(siaddr)
+            if s_ip_iface = Antfarm::Models::IPIf.find_by(address: siaddr)
               l2iface = s_ip_iface.l3_if.l2_if
 
               if l2iface.eth_if
@@ -135,11 +135,11 @@ module Antfarm
 
             if pkt.proto.include?('Modbus')
               if pkt.tcp_src == 502
-                src.l2_if.node.tags.find_or_create_by_name! :name => 'Modbus TCP Slave'
-                dst.l2_if.node.tags.find_or_create_by_name! :name => 'Modbus TCP Master'
+                src.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Slave'
+                dst.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Master'
               elsif pkt.tcp_dst == 502
-                src.l2_if.node.tags.find_or_create_by_name! :name => 'Modbus TCP Master'
-                dst.l2_if.node.tags.find_or_create_by_name! :name => 'Modbus TCP Slave'
+                src.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Master'
+                dst.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Slave'
               end
             end
 
