@@ -68,6 +68,9 @@ module Antfarm
       # Load the Antfarm requirements
       load_requirements
 
+      # Just getting rid of pesky deprication warning...
+      I18n.enforce_available_locales = true
+
       # Make sure an application directory exists for the current user
       Antfarm::Helpers.create_user_directory
     end
@@ -101,6 +104,14 @@ module Antfarm
       # then set them to the defaults specified in the user's config file.
       # If they don't exist in the config file, set them to the defaults
       # specified in the configuration object.
+      if @configuration.certainty_factor.nil?
+        if config['certainty_factor']
+          @configuration.certainty_factor = config['certainty_factor']
+        else
+          @configuration.default_certainty_factor
+        end
+      end
+
       if @configuration.environment.nil?
         if config['environment']
           @configuration.environment = config['environment']
@@ -175,16 +186,22 @@ module Antfarm
   end
 
   class Configuration
+    attr_accessor :certainty_factor
     attr_accessor :environment
     attr_accessor :log_level
     attr_accessor :outputter
     attr_accessor :prefix
 
     def initialize
-      @environment = nil
-      @log_level   = nil
-      @outputter   = nil
-      @prefix      = nil
+      @certainty_factor = nil
+      @environment      = nil
+      @log_level        = nil
+      @outputter        = nil
+      @prefix           = nil
+    end
+
+    def default_certainty_factor
+      @certainty_factor = Antfarm::CF_LACK_OF_PROOF
     end
 
     def default_environment
