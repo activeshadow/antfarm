@@ -32,10 +32,8 @@
 module Antfarm
   module Models
     class L3If < ActiveRecord::Base
-      has_many :tags, as: :taggable
-      has_many :inbound_connections,  class_name: 'Connection', foreign_key: 'dst_id'
-      has_many :outbound_connections, class_name: 'Connection', foreign_key: 'src_id'
-      has_one  :ip_if,                class_name: 'IPIf',       dependent:   :destroy
+      has_many :tags,  as: :taggable
+      has_one  :ip_if, class_name: 'IPIf', dependent: :destroy
 
       belongs_to :l2_if
 

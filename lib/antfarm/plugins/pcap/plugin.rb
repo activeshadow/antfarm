@@ -30,6 +30,23 @@
 ################################################################################
 
 module Antfarm
+  module Models
+    class Connection < ActiveRecord::Base
+      belongs_to :src, :class_name => "IPIf"
+      belongs_to :dst, :class_name => "IPIf"
+
+      validates :src, :presence => true
+      validates :dst, :presence => true
+    end
+
+    class IPIf < ActiveRecord::Base
+      has_many :inbound_connections,  class_name: 'Connection', foreign_key: 'dst_id'
+      has_many :outbound_connections, class_name: 'Connection', foreign_key: 'src_id'
+    end
+  end
+end
+
+module Antfarm
   module Pcap
     def self.registered(plugin)
       plugin.name = 'pcap'

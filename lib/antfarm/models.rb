@@ -1,5 +1,4 @@
 require 'antfarm/models/action'
-require 'antfarm/models/connection'
 require 'antfarm/models/eth_if'
 require 'antfarm/models/ip_if'
 require 'antfarm/models/ip_net'
