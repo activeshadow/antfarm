@@ -3,14 +3,6 @@ require 'test_helper'
 class L3IfTest < TestCase
   include Antfarm::Models
 
-  test 'fails with no layer 2 interface' do
-    assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :l3iface, :l2_if => nil
-    end
-
-    assert !Fabricate.build(:l3iface, :l2_if => nil).valid?
-  end
-
   test 'fails with no certainty factor' do
     assert_raises(ActiveRecord::RecordInvalid) do
       Fabricate :l3iface, :certainty_factor => nil
@@ -26,23 +18,6 @@ class L3IfTest < TestCase
     assert_equal 0.5, iface.certainty_factor
     iface = Fabricate :l3iface, :certainty_factor => -1.15
     assert_equal -1.0, iface.certainty_factor
-  end
-
-  test 'creates IP iface using attributes' do
-    iface = Fabricate :l3iface, :ip_if_attributes => { :address => '10.0.0.1' }
-    assert_kind_of Antfarm::Models::IPIf, iface.ip_if
-    assert_equal   '10.0.0.1', iface.ip_if.address
-  end
-
-  test 'search fails when no address given' do
-    Fabricate :l3iface, :ip_if_attributes => { :address => '10.0.0.1' }
-    assert_raises(Antfarm::AntfarmError) do
-      L3If.interface_addressed(nil)
-    end
-
-    assert_nil     L3If.interface_addressed('10.0.0.0')
-    assert_kind_of Antfarm::Models::L3If,
-                   L3If.interface_addressed('10.0.0.1')
   end
 
   test 'allows tags to be added via taggable association' do

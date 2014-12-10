@@ -9,17 +9,17 @@ class IPAddrTest < TestCase
   end
 
   test 'correctly determines CIDR length' do
-    assert_equal 8,  IPAddr.new('192.168.1.1/8').cidr
-    assert_equal 16, IPAddr.new('192.168.1.1/16').cidr
-    assert_equal 24, IPAddr.new('192.168.1.1/24').cidr
-    assert_equal 27, IPAddr.new('192.168.1.1/27').cidr
+    assert_equal 8,  IPAddr.new('192.168.1.1/8').prefix
+    assert_equal 16, IPAddr.new('192.168.1.1/16').prefix
+    assert_equal 24, IPAddr.new('192.168.1.1/24').prefix
+    assert_equal 27, IPAddr.new('192.168.1.1/27').prefix
   end
 
   test 'correctly provides CIDR string' do
-    assert_equal '192.0.0.0/8',     IPAddr.new('192.168.1.1/8').to_cidr_string
-    assert_equal '192.168.0.0/16',  IPAddr.new('192.168.1.1/16').to_cidr_string
-    assert_equal '192.168.1.0/24',  IPAddr.new('192.168.1.1/24').to_cidr_string
-    assert_equal '192.168.1.32/27', IPAddr.new('192.168.1.33/27').to_cidr_string
+    assert_equal '192.168.1.1/8',   IPAddr.new('192.168.1.1/8').to_cidr_string
+    assert_equal '192.168.1.1/16',  IPAddr.new('192.168.1.1/16').to_cidr_string
+    assert_equal '192.168.1.1/24',  IPAddr.new('192.168.1.1/24').to_cidr_string
+    assert_equal '192.168.1.33/27', IPAddr.new('192.168.1.33/27').to_cidr_string
   end
 
   test 'correctly determines broadcast address' do

@@ -14,14 +14,6 @@ class IPNetTest < TestCase
     assert net != Fabricate(:ipnet, :l3_net => nil).l3_net
   end
 
-  test 'fails with no address' do
-    assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :ipnet, :address => nil
-    end
-
-    assert !Fabricate.build(:ipnet, :address => nil).valid?
-  end
-
   test 'fails with loopback address' do
     assert_raises(ActiveRecord::RecordInvalid) do
       Fabricate :ipnet, :address => '127.0.0.0/8'
@@ -31,23 +23,9 @@ class IPNetTest < TestCase
   end
 
   test 'fails with invalid address' do
-    assert_raises(ActiveRecord::RecordInvalid) do
+    assert_raises(IPAddr::InvalidAddressError) do
       Fabricate :ipnet, :address => '276.87.355.0/24'
     end
-
-    assert !Fabricate.build(:ipnet, :address => '276.87.355.0/24').valid?
-  end
-
-  test 'correctly sets network as private' do
-    assert  Fabricate(:ipnet, :address => '192.168.101.0/24').private
-    assert !Fabricate(:ipnet, :address => '207.65.45.0/24').private
-  end
-
-  test 'creates private network entry when private' do
-    net = Fabricate(:ipnet, :address => '192.168.101.0/24')
-    assert 'Private network for 192.168.101.0/24', net.private_net.description
-
-    assert !Fabricate(:ipnet, :address => '207.65.45.0/24').private_net
   end
 
   test 'merges existing networks that are subnetworks' do

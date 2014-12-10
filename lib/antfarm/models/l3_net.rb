@@ -32,99 +32,12 @@
 module Antfarm
   module Models
     class L3Net < ActiveRecord::Base
-      has_many :tags,   :as => :taggable
-      has_many :l3_ifs, :inverse_of => :l3_net
-
-      has_one :ip_net, :class_name => 'IPNet', :inverse_of => :l3_net, :dependent => :destroy
-
-      accepts_nested_attributes_for :ip_net
+      has_many :tags,   as: :taggable
+      has_one  :ip_net, class_name: 'IPNet', dependent: :destroy
 
       before_save :clamp_certainty_factor
 
       validates :certainty_factor, :presence => true
-
-      # Take the given network and merge with it any sub_networks of the given
-      # network.
-      def self.merge(network, merge_certainty_factor = Antfarm::CF_PROVEN_TRUE)
-        unless network
-          raise AntfarmError, "nil argument supplied", caller
-        end
-
-        Antfarm.log :info, "Merge called for #{network.ip_net.address}"
-
-        for sub_network in self.networks_contained_within(network.ip_net.address)
-          unless sub_network == network
-            unless merge_certainty_factor
-              merge_certainty_factor = Antfarm::CF_LACK_OF_PROOF
-            end
-
-            merge_certainty_factor = Antfarm.clamp(merge_certainty_factor)
-
-            sub_network.l3_ifs.each do |iface|
-              iface.update_attribute :l3_net, network
-            end
-
-            # TODO: update network's certainty factor using sub_network's
-            #       certainty factor.
-
-            network.save!
-
-            # Because of :dependent => :destroy above, calling destroy here will
-            # also cause destroy to be called on ip_net
-            sub_network.destroy
-          end
-        end
-      end
-
-      # Find the Layer3Network with the given address.
-      def self.network_addressed(ip_net_str)
-        # Calling network_containing here because if a network already exists
-        # that encompasses the given network, we want to automatically use that
-        # network instead.
-        #
-        # TODO: figure out how to use alias with class methods
-        self.network_containing(ip_net_str)
-      end
-
-      # Find the Layer3Network the given network is a sub_network of, if one
-      # exists.
-      def self.network_containing(ip_net_str)
-        unless ip_net_str
-          raise AntfarmError, "nil argument supplied", caller
-        end
-
-        # Don't want to require a Layer3Network to be passed in case a check is
-        # being performed before a Layer3Network is created.
-        network = Antfarm::IPAddrExt.new(ip_net_str)
-
-        ip_nets = IPNet.find(:all)
-        for ip_net in ip_nets
-          if ip_net.addr.network_in_network?(network)
-            return L3Net.find(ip_net.id)
-          end
-        end
-
-        return nil
-      end
-
-      # Find any Layer3Networks that are sub_networks of the given network.
-      def self.networks_contained_within(ip_net_str)
-        unless ip_net_str
-          raise AntfarmError, "nil argument supplied", caller
-        end
-
-        # Don't want to require a Layer3Network to be passed in case a check is
-        # being performed before a Layer3Network is created.
-        network = Antfarm::IPAddrExt.new(ip_net_str)
-        sub_networks = Array.new
-
-        ip_nets = IPNet.find(:all)
-        for ip_net in ip_nets
-          sub_networks << L3Net.find(ip_net.id) if network.network_in_network?(ip_net.address)
-        end
-
-        return sub_networks
-      end
 
       #######
       private

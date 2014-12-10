@@ -42,7 +42,8 @@ class NodeTest < TestCase
     end
 
     assert_nil     Node.nodes_of_device_type('foo')
-    assert_kind_of Array, Node.nodes_of_device_type('RTU')
+    assert_kind_of ActiveRecord::Relation, Node.nodes_of_device_type('RTU')
+    assert_equal   1, Node.nodes_of_device_type('RTU').size
   end
 
   test 'creates full stack of records using attributes' do

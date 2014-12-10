@@ -51,7 +51,7 @@ module Antfarm
           raise AntfarmError, 'nil argument supplied', caller
         end
 
-        nodes = self.find_all_by_name(name)
+        nodes = self.where(name: name)
 
         if nodes.empty?
           Antfarm.log :warn, 'Node: did not find an existing node with given name.'
@@ -68,7 +68,7 @@ module Antfarm
           raise AntfarmError, 'nil argument supplied', caller
         end
 
-        nodes = self.find_all_by_device_type(device_type)
+        nodes = self.where(device_type: device_type)
 
         if nodes.empty?
           Antfarm.log :warn, 'Node: did not find any existing nodes of given device type.'

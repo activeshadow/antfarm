@@ -54,15 +54,9 @@ module Antfarm
     #      Antfarm::Models::IPIf.new(:address => '192.168.0.100')
     #    end
     class IPIf < ActiveRecord::Base
-      # Representation of IP address as <tt>Antfarm::IPAddrExt</tt> object
-      #--
-      # This is useful for tracking the subnet prefix (if provided) during
-      # initial creation of the IP Interface model, which is used for deciding
-      # what type of L3 Network to create.
-      #++
-      attr_accessor :addr # IPAddrExt object so we can track prefix if provided
+      belongs_to :l3_if #, inverse_of: :ip_if
 
-      belongs_to :l3_if, :inverse_of => :ip_if
+      before_validation :create_l3_if, on: :create
 
       # TODO: figure out why it fails when `after_save` is used...
       #
@@ -72,15 +66,10 @@ module Antfarm
       # therein causing recursion since the `associate_l3_net` method is called
       # once again.
       after_create :create_ip_net
-      after_create :associate_l3_net
+#     after_create :associate_l3_net
 
       validates :address, :presence => true
       validates :l3_if,   :presence => true
-
-      # Create the `@addr` instance variable on the record when model is found
-      after_find do |record|
-        @addr = Antfarm::IPAddrExt.new(record.address)
-      end
 
       # Validate data for requirements before saving interface to the database.
       #
@@ -88,46 +77,19 @@ module Antfarm
       # on anything saved to the database at any time, including a create and an
       # update.
       validates_each :address do |record, attr, value|
-        begin
-          # This block is run outside of the context of a model instance,
-          # so `@addr` cannot be used here. Rather, we must reference it via
-          # the attribute accessor `addr` available on the model instance.
-          record.addr    = Antfarm::IPAddrExt.new(value)
-          record.address = record.addr.to_s
-
-          # Don't save the interface if it's a loopback address.
-          if record.addr.loopback_address?
-            record.errors.add(:address, 'loopback address not allowed')
-          end
-
-          # If the address is public and it already exists in the database,
-          # don't create a new one but still create a new IP Network just in
-          # case the data given for this address includes more detailed
-          # information about its network.
-          unless record.addr.private_address?
-            if interface = IPIf.find_by_address(record.address)
-              interface.update_attribute :address, value
-              message = "#{record.address} already exists, but a new IP Network was created"
-              record.errors.add(:address, message)
-              Antfarm.log :info, message
-            end
-          end
-        rescue ArgumentError
-          record.errors.add(:address, "Invalid IP address: #{value}")
+        # Don't save the interface if it's a loopback address.
+        if value and value.loopback?
+          record.errors.add(attr, 'loopback address not allowed')
         end
-      end
 
-      # Allow prefix provided to be nil just in case this call is part of a loop
-      # that may or may not need to change the prefix.
-      def self.execute_with_prefix(prefix = nil, &block)
-        if prefix.nil?
-          yield
-        else
-          original_prefix = Antfarm.config.prefix
-          Antfarm.config.prefix = prefix.to_i
-          yield
-          Antfarm.config.prefix = original_prefix
+=begin
+        if interface = IPIf.find_by_address(value)
+          interface.update_attribute :address, value
+          message = "#{value} already exists, but a new IP Network was created"
+          record.errors.add(:address, message)
+          Antfarm.log :info, message
         end
+=end
       end
 
       #######
@@ -140,13 +102,13 @@ module Antfarm
       def create_ip_net
         # Check to see if a network exists that contains this address.
         # If not, create a small one that does.
-        unless L3Net.network_containing(@addr.to_cidr_string)
-          if @addr.prefix == 32 # no subnet data provided
-            @addr.prefix = Antfarm.config.prefix # defaults to /30
+        unless IPNet.network_containing(self.address.to_cidr_string)
+          if self.address.prefix == 32 # no subnet data provided
+            self.address.prefix = Antfarm.config.prefix # defaults to /30
 
             # address for this interface shouldn't be a network address...
-            if @addr == @addr.network
-              @addr.prefix = Antfarm.config.prefix - 1
+            if self.address == self.address.network
+              self.address.prefix = Antfarm.config.prefix - 1
             end
 
             certainty_factor = Antfarm::CF_LIKELY_FALSE
@@ -154,11 +116,7 @@ module Antfarm
             certainty_factor = Antfarm::CF_PROVEN_TRUE
           end
 
-          L3Net.create!(
-            :certainty_factor => certainty_factor,
-            :protocol => 'IP',
-            :ip_net_attributes => { :address => @addr.net_cidr_string }
-          )
+          IPNet.create address: self.address.network.to_cidr_string
         end
       end
 
@@ -168,6 +126,22 @@ module Antfarm
       def associate_l3_net
         if layer3_network = L3Net.network_containing(self.address)
           self.l3_if.update_attribute :l3_net, layer3_network
+        end
+      end
+
+      def create_l3_if
+        unless self.l3_if
+          layer3_interface = L3If.new certainty_factor: Antfarm.config.certainty_factor
+          if layer3_interface.save
+            Antfarm.log :info, 'IPIf: Created Layer 3 Interface'
+          else
+            Antfarm.log :warn, 'IPIf: Errors occured while creating Layer 3 Interface'
+            layer3_interface.errors.full_messages do |msg|
+              Antfarm.log :warn, msg
+            end
+          end
+
+          self.l3_if = layer3_interface
         end
       end
     end
