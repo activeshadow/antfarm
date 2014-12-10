@@ -7,8 +7,12 @@ class IPAddr
     alias_method  :__new__, :new
 
     def new(addr = '::', family = Socket::AF_UNSPEC, build_netmask = true)
+      unless addr.is_a?(String)
+        addr = addr.to_cidr_string
+      end
+
       address, netmask = addr.split('/')
-      ipaddr = __new__(addr, family)
+      ipaddr = __new__(address, family)
 
       if build_netmask
         if ipaddr.ipv4?
@@ -30,7 +34,7 @@ class IPAddr
     return self.mask(@netmask.to_s)
   end
 
-  def cidr
+  def prefix
     addr_bits = case
                 when self.ipv4? then 32
                 when self.ipv6? then 128
@@ -48,8 +52,12 @@ class IPAddr
     return addr_bits
   end
 
+  def prefix=(prefix)
+    self.mask!(prefix)
+  end
+
   def to_cidr_string
-    str = sprintf("%s/%i", self.network.to_string, self.cidr)
+    str = sprintf("%s/%i", self.to_s, self.prefix)
   end
 
   def broadcast
@@ -85,8 +93,8 @@ class IPAddr
   alias_method :__include__, :include?
 
   def include?(other)
-    return false unless self.__include__(other.network)
-    return false unless self.__include__(other.broadcast)
+    return false unless self.network.__include__(other.network)
+    return false unless self.network.__include__(other.broadcast)
     return true
   end
 end
