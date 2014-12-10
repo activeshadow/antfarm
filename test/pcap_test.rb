@@ -15,8 +15,8 @@ class PcapTest < TestCase
     assert_equal 1, src.l2_ifs.count
     assert_equal 1, dst.l2_ifs.count
 
-    assert_equal 'CA:02:03:F8:00:06', src.l2_ifs.first.eth_if.address
-    assert_equal '00:0C:29:CE:53:E6', dst.l2_ifs.first.eth_if.address
+    assert_equal 'CA:02:03:F8:00:06', src.l2_ifs.first.eth_if.address.upcase
+    assert_equal '00:0C:29:CE:53:E6', dst.l2_ifs.first.eth_if.address.upcase
 
     assert dst.l2_ifs.first.tags.map(&:name).include?('VMware, Inc.')
 

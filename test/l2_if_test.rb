@@ -3,14 +3,6 @@ require 'test_helper'
 class L2IfTest < TestCase
   include Antfarm::Models
 
-  test 'fails with no node' do
-    assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :l2iface, :node => nil
-    end
-
-    assert !Fabricate.build(:l2iface, :node => nil).valid?
-  end
-
   test 'fails with no certainty factor' do
     assert_raises(ActiveRecord::RecordInvalid) do
       Fabricate :l2iface, :certainty_factor => nil

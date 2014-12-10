@@ -20,17 +20,6 @@ class L3NetTest < TestCase
     assert_equal -1.0, net.certainty_factor
   end
 
-  test 'destroys associated IP network object' do
-    ip = IPNet.create(address: '192.168.1.0/24')
-    l3 = ip.l3_net
-
-    l3.destroy
-
-    assert_raises(ActiveRecord::RecordNotFound) do
-      ip.reload
-    end
-  end
-
   test 'allows tags to be added via taggable association' do
     net = Fabricate :l3net
 

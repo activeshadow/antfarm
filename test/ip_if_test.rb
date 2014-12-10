@@ -40,7 +40,7 @@ class IPIfTest < TestCase
 
     iface1.reload
 
-    assert_equal iface2.l3_if.l3_net, iface1.l3_if.l3_net
+    assert_equal iface2.network.l3_net, iface1.network.l3_net
   end
 
   test 'creates IP network and merges networks and interfaces' do
@@ -50,7 +50,6 @@ class IPIfTest < TestCase
     iface = Fabricate :ipiface, :address => '192.168.101.4/24'
 
     assert_equal 1, L3Net.count
-    assert_equal '192.168.101.0/24', L3Net.first.ip_net.address
-    assert_equal L3Net.first, iface.l3_if.l3_net
+    assert_equal '192.168.101.0/24', L3Net.first.ip_net.address.to_cidr_string
   end
 end

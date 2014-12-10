@@ -3,14 +3,6 @@ require 'test_helper'
 class EthIfTest < TestCase
   include Antfarm::Models
 
-  test 'fails with no layer 2 interface' do
-    assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :ethiface, :l2_if => nil
-    end
-
-    assert !Fabricate.build(:ethiface, :l2_if => nil).valid?
-  end
-
   test 'fails with no address' do
     assert_raises(ActiveRecord::RecordInvalid) do
       Fabricate :ethiface, :address => nil

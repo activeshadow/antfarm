@@ -23,7 +23,7 @@ class IPNetTest < TestCase
   end
 
   test 'fails with invalid address' do
-    assert_raises(IPAddr::InvalidAddressError) do
+    assert_raises(ActiveRecord::RecordInvalid) do
       Fabricate :ipnet, :address => '276.87.355.0/24'
     end
   end
