@@ -49,7 +49,7 @@ Fabricator(:service, :class_name => Antfarm::Models::Service) do
 end
 
 Fabricator(:conn, :class_name => Antfarm::Models::Connection) do
-  src      :fabricator => :l3iface
-  dst      :fabricator => :l3iface
+  src      :fabricator => :ipiface
+  dst      :fabricator => :ipiface
   dst_port 502
 end
