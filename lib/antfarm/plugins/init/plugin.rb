@@ -30,11 +30,11 @@ module Antfarm
       load 'antfarm/schema.rb'
 
       if opts[:all]
-        Dir["#{Antfarm.root}/lib/antfarm/plugins/*/**/schema.rb"].each  { |file| require file }
-        Dir["#{Antfarm::Helpers.user_plugins_dir}/*/**/schema.rb"].each { |file| require file }
+        Dir["#{Antfarm.root}/lib/antfarm/plugins/*/**/schema.rb"].each  { |file| load file }
+        Dir["#{Antfarm::Helpers.user_plugins_dir}/*/**/schema.rb"].each { |file| load file }
       elsif plugin = opts[:plugin]
-        Dir["#{Antfarm.root}/lib/antfarm/plugins/#{plugin}/schema.rb"].each  { |file| require file }
-        Dir["#{Antfarm::Helpers.user_plugins_dir}/#{plugin}/schema.rb"].each { |file| require file }
+        Dir["#{Antfarm.root}/lib/antfarm/plugins/#{plugin}/schema.rb"].each  { |file| load file }
+        Dir["#{Antfarm::Helpers.user_plugins_dir}/#{plugin}/schema.rb"].each { |file| load file }
       end
     end
   end
