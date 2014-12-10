@@ -52,19 +52,16 @@ module Antfarm
         end
       end
 
-      # This is necessary so we use the actual network address instead of the
-      # /32 host address. This is due to the monkey-patching we did to IPAddr.
-      def address=(address)
-        Antfarm.output "Value of `address` when passed to setter: #{address}"
-        write_attribute(:address, IPAddr.new(address).network)
-      end
+      #######
+      private
+      #######
 
       # Merge any sub-networks of this network into this network
       def merge(merge_certainty_factor = Antfarm.config.certainty_factor)
-        Antfarm.log :info, "Merge called for #{self.address.network}"
+        Antfarm.log :info, "Merge called for #{self.address}"
 
-        for sub_network in IPNet.networks_contained_within(self.address.network)
-          unless sub_network.address.network == self.address.network
+        for sub_network in IPNet.networks_contained_within(self.address)
+          unless sub_network.address.eql?(self.address)
             # TODO: update network's certainty factor using sub_network's
             #       certainty factor.
 #           merge_certainty_factor = Antfarm.clamp(merge_certainty_factor)
@@ -72,14 +69,10 @@ module Antfarm
 
             # Because of :dependent => :destroy above, calling destroy here will
             # also cause destroy to be called on ip_net
-            sub_network.destroy
+            sub_network.l3_net.destroy
           end
         end
       end
-
-      #######
-      private
-      #######
 
       # Find the IP network with the given address.
       def self.network_addressed(ip_net)
@@ -94,15 +87,15 @@ module Antfarm
       # Find the IP network the given network is a sub_network of, if one
       # exists.
       def self.network_containing(ip_net)
-        network = IPAddr.new(ip_net).network
-        ip_nets = IPNet.where("address >> ?", network.to_cidr_string)
+        ip_net  = IPAddr.new(ip_net) if ip_net.is_a?(String)
+        ip_nets = IPNet.where("address >> ?", ip_net.to_cidr_string)
         return ip_nets.first # TODO: what if there's more than one?
       end
 
       # Find any IP networks that are sub_networks of the given network.
       def self.networks_contained_within(ip_net)
-        network = IPAddr.new(ip_net).network
-        return IPNet.where("address << ?", network.to_cidr_string)
+        ip_net = IPAddr.new(ip_net) if ip_net.is_a?(String)
+        return IPNet.where("address << ?", ip_net.to_cidr_string)
       end
 
       def create_l3_net
