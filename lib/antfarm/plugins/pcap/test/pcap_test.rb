@@ -3,7 +3,7 @@ require 'packetfu/modbus'
 
 class PcapTest < TestCase
   test 'PCAP Parser w/ Modbus PacketFu addition and OUI parser' do
-    opts = { :file => 'test/pcap-parser-test-data.pcap' }
+    opts = { :file => "#{File.dirname(__FILE__)}/pcap-parser-test-data.pcap" }
 
     Antfarm.plugins['pcap'].run(opts)
 
