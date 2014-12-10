@@ -160,7 +160,7 @@ module Antfarm
               end
             end
 
-            Antfarm::Models::Connection.create! :src => src, :dst => dst,
+            Antfarm::Models::Connection.create! :src => src.ip_if, :dst => dst.ip_if,
               :description => pkt.proto.last,
               :src_port => pkt.proto.include?('TCP') ? pkt.tcp_src : nil,
               :dst_port => pkt.proto.include?('TCP') ? pkt.tcp_dst : nil
