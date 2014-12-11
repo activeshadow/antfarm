@@ -32,32 +32,38 @@
 module Antfarm
   module Models
     class EthIf < ActiveRecord::Base
-      belongs_to :l2_if
+      has_many   :tags,   as: :taggable
+      has_many   :ip_ifs, class_name: 'IPIf', dependent: :destroy
+      belongs_to :node
 
-      before_validation :create_l2_if, on: :create
+      before_validation :set_attributes_from_store
 
-      validates :address, :presence => true,
-                          :format   => { :with => /([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}/i }
-      validates :l2_if,   :presence => true
+      validates   :certainty_factor, presence:    true
+      validates   :address,          uniqueness:  true,
+                                     allow_nil:   true,
+                                     allow_blank: true
+      before_save :clamp_certainty_factor
 
       #######
       private
       #######
 
-      def create_l2_if
-        unless self.l2_if
-          layer2_interface = L2If.new certainty_factor: Antfarm.config.certainty_factor
-          if layer2_interface.save
-            Antfarm.log :info, 'EthIf: Created Layer 2 Interface'
-          else
-            Antfarm.log :warn, 'EthIf: Errors occured while creating Layer 2 Interface'
-            layer2_interface.errors.full_messages do |msg|
-              Antfarm.log :warn, msg
-            end
-          end
-
-          self.l2_if = layer2_interface
+      def set_attributes_from_store
+        unless Antfarm.store.eth_if_node.nil?
+          self.node ||= Antfarm.store.eth_if_node
         end
+
+        unless Antfarm.store.eth_if_cf.nil?
+          self.certainty_factor ||= Antfarm.store.eth_if_cf
+        end
+
+        unless Antfarm.store.eth_if_address.nil?
+          self.address ||= Antfarm.store.eth_if_address
+        end
+      end
+
+      def clamp_certainty_factor
+        self.certainty_factor = Antfarm.clamp(self.certainty_factor)
       end
     end
   end

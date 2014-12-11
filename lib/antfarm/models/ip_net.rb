@@ -32,13 +32,15 @@
 module Antfarm
   module Models
     class IPNet < ActiveRecord::Base
-      belongs_to :l3_net
+      has_many :tags, as: :taggable
 
-      before_validation :create_l3_net, on: :create
-      after_create      :merge
+      before_validation :set_attributes_from_store
 
-      validates :address, presence: true
-      validates :l3_net,  presence: true
+      validates    :certainty_factor, presence:   true
+      validates    :address,          presence:   true,
+                                      uniqueness: true
+      before_save  :clamp_certainty_factor
+      after_create :merge
 
       # Validate data for requirements before saving network to the database.
       #
@@ -56,7 +58,25 @@ module Antfarm
       private
       #######
 
+      def set_attributes_from_store
+        unless Antfarm.store.ip_net_cf.nil?
+          self.certainty_factor ||= Antfarm.store.ip_net_cf
+        end
+
+        unless Antfarm.store.ip_net_address.nil?
+          self.address ||= Antfarm.store.ip_net_address
+        end
+      end
+
+      def clamp_certainty_factor
+        self.certainty_factor = Antfarm.clamp(self.certainty_factor)
+      end
+
       # Merge any sub-networks of this network into this network
+      #
+      # TODO: check to see if a larger network already exists... the current
+      # merge function will only check to see if there's any networks smaller
+      # than this one.
       def merge(merge_certainty_factor = Antfarm.config.certainty_factor)
         Antfarm.log :info, "Merge called for #{self.address}"
 
@@ -69,7 +89,7 @@ module Antfarm
 
             # Because of :dependent => :destroy above, calling destroy here will
             # also cause destroy to be called on ip_net
-            sub_network.l3_net.destroy
+            sub_network.destroy
           end
         end
       end
@@ -96,22 +116,6 @@ module Antfarm
       def self.networks_contained_within(ip_net)
         ip_net = IPAddr.new(ip_net) if ip_net.is_a?(String)
         return IPNet.where("address <<= ?", ip_net.to_cidr_string)
-      end
-
-      def create_l3_net
-        unless self.l3_net
-          layer3_network = L3Net.new certainty_factor: Antfarm.config.certainty_factor
-          if layer3_network.save
-            Antfarm.log :info, 'IPNet: Created Layer 3 Network'
-          else
-            Antfarm.log :warn, 'IPNet: Errors occured while creating Layer 3 Network'
-            layer3_network.errors.full_messages do |msg|
-              Antfarm.log :warn, msg
-            end
-          end
-
-          self.l3_net = layer3_network
-        end
       end
     end
   end

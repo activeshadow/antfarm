@@ -54,21 +54,17 @@ module Antfarm
     #      Antfarm::Models::IPIf.new(:address => '192.168.0.100')
     #    end
     class IPIf < ActiveRecord::Base
-      belongs_to :l3_if
+      has_many   :tags, as: :taggable
+      belongs_to :eth_if
 
-      before_validation :create_l3_if, on: :create
+      before_validation :set_attributes_from_store
 
-      # TODO: figure out why it fails when `after_save` is used...
-      #
-      # Recursion seems to occur in the `associate_l3_net` method when called
-      # after every save... it's like the call to update attributes on the L3
-      # Interface for this IP Interface causes this model to be saved again,
-      # therein causing recursion since the `associate_l3_net` method is called
-      # once again.
+      validates    :certainty_factor, presence:   true
+      validates    :address,          presence:   true,
+                                      uniqueness: true
+      validates    :virtual,          inclusion:  {in: [true,false]}
+      before_save  :clamp_certainty_factor
       after_create :create_ip_net
-
-      validates :address, presence: true, uniqueness: true
-      validates :l3_if,   presence: true
 
       # Validate data for requirements before saving interface to the database.
       #
@@ -98,6 +94,28 @@ module Antfarm
       private
       #######
 
+      def set_attributes_from_store
+        unless Antfarm.store.ip_if_eth_if.nil?
+          self.eth_if ||= Antfarm.store.ip_if_eth_if
+        end
+
+        unless Antfarm.store.ip_if_cf.nil?
+          self.certainty_factor ||= Antfarm.store.ip_if_cf
+        end
+
+        unless Antfarm.store.ip_if_address.nil?
+          self.address ||= Antfarm.store.ip_if_address
+        end
+
+        unless Antfarm.store.ip_if_virtual.nil?
+          self.virtual ||= Antfarm.store.ip_if_virtual
+        end
+      end
+
+      def clamp_certainty_factor
+        self.certainty_factor = Antfarm.clamp(self.certainty_factor)
+      end
+
       # Create an IP Network (and its associated L3 Network) that would contain
       # the IP address provided for this IP Interface model unless one already
       # exists.
@@ -114,22 +132,6 @@ module Antfarm
 
           IPNet.create address: "#{self.address}/#{@prefix}"
           Antfarm.log :info, 'IPIf: Created Layer 3 Network'
-        end
-      end
-
-      def create_l3_if
-        unless self.l3_if
-          layer3_interface = L3If.new certainty_factor: Antfarm.config.certainty_factor
-          if layer3_interface.save
-            Antfarm.log :info, 'IPIf: Created Layer 3 Interface'
-          else
-            Antfarm.log :warn, 'IPIf: Errors occured while creating Layer 3 Interface'
-            layer3_interface.errors.full_messages do |msg|
-              Antfarm.log :warn, msg
-            end
-          end
-
-          self.l3_if = layer3_interface
         end
       end
     end

@@ -32,78 +32,40 @@
 module Antfarm
   module Models
     class Node < ActiveRecord::Base
-      has_many :tags, :as => :taggable
-      has_many :l2_ifs, :inverse_of => :node, :dependent => :destroy
-      has_many :l3_ifs, :through => :l2_ifs
-      has_many :services
+      has_many :tags,    as: :taggable
+      has_many :eth_ifs, dependent: :destroy
+      has_many :ip_ifs,  through: :eth_ifs, class_name: 'IPIf'
 
-      has_one :operating_system
+      before_validation :set_attributes_from_store
 
-      accepts_nested_attributes_for :l2_ifs
-
-      validates :certainty_factor, :presence => true
-
-      before_save  :clamp_certainty_factor
-
-      # Find and return nodes found with the given name.
-      def self.node_named(name)
-        unless name
-          raise AntfarmError, 'nil argument supplied', caller
-        end
-
-        nodes = self.where(name: name)
-
-        if nodes.empty?
-          Antfarm.log :warn, 'Node: did not find an existing node with given name.'
-          return nil
-        else
-          Antfarm.log :info, 'Node: found existing nodes with given name.'
-          return nodes
-        end
-      end
-
-      # Find and return all the nodes found that are the given type.
-      def self.nodes_of_device_type(device_type)
-        unless device_type
-          raise AntfarmError, 'nil argument supplied', caller
-        end
-
-        nodes = self.where(device_type: device_type)
-
-        if nodes.empty?
-          Antfarm.log :warn, 'Node: did not find any existing nodes of given device type.'
-          return nil
-        else
-          Antfarm.log :info, 'Node: found existing nodes of given device type.'
-          return nodes
-        end
-      end
+      validates   :certainty_factor, presence:    true
+      validates   :name,             uniqueness:  true,
+                                     allow_nil:   true,
+                                     allow_blank: true
+      before_save :clamp_certainty_factor
 
       def merge_from(node)
-        unless node
-          raise AntfarmError, 'nil argument supplied', caller
-        end
-
-        node.l2_ifs.each { |iface| iface.node = self }
+        node.eth_ifs.each { |iface| iface.node = self }
         Node.destroy(node.id)
-      end
-
-      def interfaces_in_network(network)
-        interfaces = Array.new
-
-        self.l3_ifs.each do |iface|
-          addr = Antfarm::IPAddrExt.new(iface.ip_if.address)
-          if network.include?(addr)
-            interfaces << iface
-          end
-        end
-
-        return interfaces
       end
 
       #######
       private
       #######
+
+      def set_attributes_from_store
+        unless Antfarm.store.node_cf.nil?
+          self.certainty_factor ||= Antfarm.store.node_cf
+        end
+
+        unless Antfarm.store.node_cf.nil?
+          self.name ||= Antfarm.store.node_name
+        end
+
+        unless Antfarm.store.node_cf.nil?
+          self.device_type ||= Antfarm.store.node_device_type
+        end
+      end
 
       def clamp_certainty_factor
         self.certainty_factor = Antfarm.clamp(self.certainty_factor)

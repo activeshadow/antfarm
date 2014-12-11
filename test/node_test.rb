@@ -7,63 +7,28 @@ class NodeTest < TestCase
     assert_raises(ActiveRecord::RecordInvalid) do
       Node.create!
     end
+    assert !Node.new.valid?
+  end
 
-    assert !Node.create.valid?
+  test 'correctly sets certainty factor from keystore' do
+    Antfarm.store.node_cf = 0.34
+    node = Node.create!
+    assert_equal 0.34, node.certainty_factor
   end
 
   test 'correctly clamps certainty factor' do
-    node = Fabricate :node, :certainty_factor => 1.15
+    node = Node.create certainty_factor: 1.15
     assert_equal 1.0, node.certainty_factor
-    node = Fabricate :node
-    assert_equal 0.5, node.certainty_factor
-    node = Fabricate :node, :certainty_factor => -1.15
+    node = Node.create certainty_factor: -1.15
     assert_equal -1.0, node.certainty_factor
-  end
 
-  test 'search fails when no name given' do
-    Fabricate :node
-
-    assert_raises(Antfarm::AntfarmError) do
-      Node.node_named(nil)
-    end
-
-    assert_nil Node.node_named('foo')
-
-    Node.node_named('test-node').each do |node|
-      assert_kind_of Antfarm::Models::Node, node
-    end
-  end
-
-  test 'search fails when no device type given' do
-    Fabricate :node
-
-    assert_raises(Antfarm::AntfarmError) do
-      Node.nodes_of_device_type(nil)
-    end
-
-    assert_nil     Node.nodes_of_device_type('foo')
-    assert_kind_of ActiveRecord::Relation, Node.nodes_of_device_type('RTU')
-    assert_equal   1, Node.nodes_of_device_type('RTU').size
-  end
-
-  test 'creates full stack of records using attributes' do
-    Fabricate :node,
-      :l2_ifs_attributes => [{
-        :certainty_factor => 1.0, :media_type => 'Ethernet',
-        :l3_ifs_attributes => [{ :certainty_factor => 1.0, :protocol => 'IP',
-          :ip_if_attributes => { :address => '192.168.101.5/24' }
-        }]
-      }]
-
-    iface = IPIf.where(address: '192.168.101.5')
-    net   = IPNet.where(address: '192.168.101.0/24')
-
-    assert iface
-    assert net
+    Antfarm.store.node_cf = 2.5
+    node = Node.create
+    assert_equal 1.0, node.certainty_factor
   end
 
   test 'allows tags to be added via taggable association' do
-    node = Fabricate :node
+    node = Node.create! certainty_factor: 0.0
 
     assert node.tags.count.zero?
     node.tags.create(:name => 'Modbus TCP Master')
@@ -71,5 +36,13 @@ class NodeTest < TestCase
     assert node.tags.first.persisted?
     assert node.tags.first.name == 'Modbus TCP Master'
     assert Tag.count == 1
+  end
+
+  test 'fails with duplicate name' do
+    Antfarm.store.node_cf = 0.0
+    Node.create! name: 'foobar'
+    assert_raises(ActiveRecord::RecordInvalid) do
+      Node.create! name: 'foobar'
+    end
   end
 end
