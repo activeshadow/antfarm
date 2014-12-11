@@ -15,7 +15,6 @@ Antfarm::Initializer.run do |config|
 end
 
 require 'minitest/autorun'
-require 'fabrication'
 
 class TestCase < Minitest::Test
   def self.test(name, &block)
