@@ -30,6 +30,7 @@
 ################################################################################
 
 require 'fileutils'
+require 'ostruct'
 
 module Antfarm
   # Symbolic marker points on the fuzzy logic certainty factor scale.
@@ -43,15 +44,20 @@ module Antfarm
   # Amount by which a value can differ and still be considered the same.
   # Mainly used as a buffer against floating point round-off errors.
   CF_VARIANCE      =  0.0001
-
-  @user_dir           = nil
-  @outputter_callback = nil
+ 
+  @key_store          = nil
   @logger_callback    = nil
+  @outputter_callback = nil
+  @user_dir           = nil
 
   class << self
     attr_accessor :logger_callback
     attr_accessor :outputter_callback
     attr_accessor :user_dir
+  end
+
+  def self.store
+    return @key_store ||= OpenStruct.new
   end
 
   def self.clamp(x, low = CF_PROVEN_FALSE, high = CF_PROVEN_TRUE)
