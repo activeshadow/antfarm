@@ -31,42 +31,41 @@
 
 ActiveRecord::Schema.define do
   create_table 'nodes', :force => true do |t|
-    t.float  'certainty_factor', :null => false
+    t.float  'certainty_factor', null: false, default: 0.0
     t.string 'name'
     t.string 'device_type'
   end
 
-  create_table 'l2_ifs', :force => true do |t|
-    t.integer 'node_id'
-    t.float   'certainty_factor', :null => false
-    t.string  'media_type'
-  end
+  add_index :nodes, :name, :unique
 
   create_table 'eth_ifs', :force => true do |t|
-    t.integer 'l2_if_id', :null => false
-    t.macaddr 'address',  :null => false
+    t.integer 'node_id'
+    t.float   'certainty_factor', null: false, default: 0.0
+    t.macaddr 'address'
   end
 
-  create_table 'l3_ifs', :force => true do |t|
-    t.integer 'l2_if_id'
-    t.float   'certainty_factor', :null => false
-    t.string  'protocol'
-  end
+  add_index :eth_ifs, :address, :unique
 
   create_table 'ip_ifs', :force => true do |t|
-    t.integer 'l3_if_id',                   :null => false
-    t.inet    'address',                    :null => false
-    t.boolean 'virtual', :default => false, :null => false
+    t.integer 'eth_if_id'
+    t.float   'certainty_factor', null: false, default: 0.0
+    t.inet    'address',          null: false
+    t.boolean 'virtual',          null: false, default: false
   end
 
-  create_table 'l3_nets', :force => true do |t|
-    t.float  'certainty_factor', :null => false
-    t.string 'protocol'
-  end
+  add_index :ip_ifs, :address, :unique
 
   create_table 'ip_nets', :force => true do |t|
-    t.integer 'l3_net_id', :null => false
-    t.cidr    'address',   :null => false
+    t.float 'certainty_factor', null: false, default: 0.0
+    t.cidr  'address',          null: false
+  end
+
+  add_index :ip_nets, :address, :unique
+
+  create_table 'tags', :force => true do |t|
+    t.string  'name',          null: false
+    t.integer 'taggable_id',   null: false
+    t.string  'taggable_type', null: false
   end
 
 =begin
@@ -93,10 +92,4 @@ ActiveRecord::Schema.define do
     t.text    'name'
   end
 =end
-
-  create_table 'tags', :force => true do |t|
-    t.string  'name',          :null => false
-    t.integer 'taggable_id',   :null => false
-    t.string  'taggable_type', :null => false
-  end
 end
