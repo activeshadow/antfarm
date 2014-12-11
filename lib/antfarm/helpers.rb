@@ -56,7 +56,8 @@ module Antfarm
     attr_accessor :user_dir
   end
 
-  def self.store
+  def self.store(clear = false)
+    @key_store = nil if clear
     return @key_store ||= OpenStruct.new
   end
 
