@@ -31,7 +31,7 @@
 
 ActiveRecord::Schema.define do
   create_table 'nodes', :force => true do |t|
-    t.float  'certainty_factor', null: false, default: 0.0
+    t.float  'certainty_factor', null: false
     t.string 'name'
     t.string 'device_type'
   end
@@ -40,7 +40,7 @@ ActiveRecord::Schema.define do
 
   create_table 'eth_ifs', :force => true do |t|
     t.integer 'node_id'
-    t.float   'certainty_factor', null: false, default: 0.0
+    t.float   'certainty_factor', null: false
     t.macaddr 'address'
   end
 
@@ -48,15 +48,15 @@ ActiveRecord::Schema.define do
 
   create_table 'ip_ifs', :force => true do |t|
     t.integer 'eth_if_id'
-    t.float   'certainty_factor', null: false, default: 0.0
+    t.float   'certainty_factor', null: false
     t.inet    'address',          null: false
-    t.boolean 'virtual',          null: false, default: false
+    t.boolean 'virtual',          null: false
   end
 
   add_index :ip_ifs, :address, unique: true
 
   create_table 'ip_nets', :force => true do |t|
-    t.float 'certainty_factor', null: false, default: 0.0
+    t.float 'certainty_factor', null: false
     t.cidr  'address',          null: false
   end
 
