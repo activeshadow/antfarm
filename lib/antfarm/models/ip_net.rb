@@ -48,15 +48,14 @@ module Antfarm
       # occur on anything saved to the database at any time, including a create
       # and an update.
       validates_each :address do |record, attr, value|
-        Antfarm.log :debug, 'IPNet: nil value for address' if value.nil?
-
-        unless value.nil?
-          Antfarm.log :debug, "IPNet: validating address #{value.to_cidr_string}"
-        end
-
         # Don't save the network if it's a loopback network.
         if value and value.loopback?
-          record.errors.add(:address, "loopback address not allowed")
+          record.errors.add(:address, 'loopback address not allowed')
+        end
+
+        # Don't save the network if a larger one already exists.
+        if value and IPNet.network_containing(value)
+          record.errors.add(:address, 'larger network that contains this network already exists')
         end
       end
 

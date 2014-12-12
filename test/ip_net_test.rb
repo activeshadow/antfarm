@@ -28,6 +28,10 @@ class IPNetTest < TestCase
   end
 
   test 'detects if a larger IP network already exists when creating' do
-    assert false
+    IPNet.create! certainty_factor: 1.0, address: '192.168.1.0/24'
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      IPNet.create! certainty_factor: 1.0, address: '192.168.1.32/27'
+    end
   end
 end
