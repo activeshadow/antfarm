@@ -13,7 +13,7 @@ module Antfarm
   # Amount by which a value can differ and still be considered the same.
   # Mainly used as a buffer against floating point round-off errors.
   CF_VARIANCE      =  0.0001
- 
+
   @key_store          = nil
   @logger_callback    = nil
   @outputter_callback = nil
@@ -62,6 +62,24 @@ module Antfarm
       Antfarm.config.prefix = prefix.to_i
       yield
       Antfarm.config.prefix = original_prefix
+    end
+  end
+
+  module OS
+    def self.windows?
+      (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def self.mac?
+      (/darwin/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def self.unix?
+      !Antfarm::OS.windows?
+    end
+
+    def self.linux?
+      Antfarm::OS.unix? and not Antfarm::OS.mac?
     end
   end
 
