@@ -95,10 +95,6 @@ module Antfarm
       #######
 
       def set_attributes_from_store
-        unless Antfarm.store.ip_if_eth_if.nil?
-          self.eth_if ||= Antfarm.store.ip_if_eth_if
-        end
-
         unless Antfarm.store.ip_if_cf.nil?
           self.certainty_factor ||= Antfarm.store.ip_if_cf
         end
@@ -130,7 +126,7 @@ module Antfarm
             certainty_factor = Antfarm::CF_PROVEN_TRUE
           end
 
-          IPNet.create address: "#{self.address}/#{@prefix}"
+          IPNet.create! address: "#{self.address}/#{@prefix}"
           Antfarm.log :info, 'IPIf: Created Layer 3 Network'
         end
       end
