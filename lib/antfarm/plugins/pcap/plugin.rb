@@ -79,77 +79,60 @@ module Antfarm
             dst = nil
 
             if s_ip_iface = Antfarm::Models::IPIf.find_by(address: siaddr)
-              l2iface = s_ip_iface.l3_if.l2_if
-
-              if l2iface.eth_if
-                if l2iface.certainty_factor < Antfarm::CF_PROVEN_TRUE
-                  l2iface.eth_if.update_attribute :address, smaddr
+              if ethiface = s_ip_iface.eth_if
+                if ethiface.certainty_factor < Antfarm::CF_PROVEN_TRUE
+                  ethiface.update_attribute :address, smaddr
                 end
               else
-                l2iface.create_eth_if! :address => smaddr
+                s_ip_iface.eth_if.create! address: smaddr
               end
 
-              src = s_ip_iface.l3_if
+              src = s_ip_iface
             else
-              node = Antfarm::Models::Node.create!(
-                :certainty_factor => Antfarm::CF_LIKELY_TRUE,
-                :tags => [
-                  Antfarm::Models::Tag.new(:name => 'PCAP')
-                ]
-              )
-
-              l2iface = node.l2_ifs.create!(
-                :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                :eth_if_attributes => { :address => smaddr },
-                :tags => [
+              ethiface = EthIf.create!(
+                certainty_factor: Antfarm::CF_PROVEN_TRUE,
+                address: smaddr,
+                tags: [
                   Antfarm::Models::Tag.new(
-                    :name => Antfarm::OuiParser.get_name(smaddr) || 'Unknown Vendor'
+                    name: Antfarm::OuiParser.get_name(smaddr) || 'Unknown Vendor'
                   )
                 ]
               )
 
-              src = l2iface.l3_ifs.create!(
-                :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                :ip_if_attributes => { :address => siaddr }
+              src = ethiface.ip_ifs.create!(
+                certainty_factor: Antfarm::CF_PROVEN_TRUE,
+                address: siaddr, virtual: false
               )
             end
 
-            if d_ip_iface = Antfarm::Models::IPIf.find_by_address(diaddr)
-              l2iface = d_ip_iface.l3_if.l2_if
-
-              if l2iface.eth_if
-                if l2iface.certainty_factor < Antfarm::CF_PROVEN_TRUE
-                  l2iface.eth_if.update_attribute :address, dmaddr
+            if d_ip_iface = Antfarm::Models::IPIf.find_by(address: diaddr)
+              if ethiface = d_ip_iface.eth_if
+                if ethiface.certainty_factor < Antfarm::CF_PROVEN_TRUE
+                  ethiface.update_attribute :address, dmaddr
                 end
               else
-                l2iface.create_eth_if! :address => dmaddr
+                d_ip_iface.eth_if.create! address: dmaddr
               end
 
-              dst = d_ip_iface.l3_if
+              dst = d_ip_iface
             else
-              node = Antfarm::Models::Node.create!(
-                :certainty_factor => Antfarm::CF_LIKELY_TRUE,
-                :tags => [
-                  Antfarm::Models::Tag.new(:name => 'PCAP')
-                ]
-              )
-
-              l2iface = node.l2_ifs.create!(
-                :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                :eth_if_attributes => { :address => dmaddr },
-                :tags => [
+              ethiface = EthIf.create!(
+                certainty_factor: Antfarm::CF_PROVEN_TRUE,
+                address: dmaddr,
+                tags: [
                   Antfarm::Models::Tag.new(
-                    :name => Antfarm::OuiParser.get_name(dmaddr) || 'Unknown Vendor'
+                    name: Antfarm::OuiParser.get_name(dmaddr) || 'Unknown Vendor'
                   )
                 ]
               )
 
-              dst = l2iface.l3_ifs.create!(
-                :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                :ip_if_attributes => { :address => diaddr }
+              dst = ethiface.ip_ifs.create!(
+                certainty_factor: Antfarm::CF_PROVEN_TRUE,
+                address: diaddr, virtual: false
               )
             end
 
+=begin
             if pkt.proto.include?('Modbus')
               if pkt.tcp_src == 502
                 src.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Slave'
@@ -159,11 +142,12 @@ module Antfarm
                 dst.l2_if.node.tags.find_or_create_by! :name => 'Modbus TCP Slave'
               end
             end
+=end
 
-            Antfarm::Models::Connection.create! :src => src.ip_if, :dst => dst.ip_if,
-              :description => pkt.proto.last,
-              :src_port => pkt.proto.include?('TCP') ? pkt.tcp_src : nil,
-              :dst_port => pkt.proto.include?('TCP') ? pkt.tcp_dst : nil
+            Antfarm::Models::Connection.create! src: src, dst: dst,
+              description: pkt.proto.last,
+              src_port:   pkt.proto.include?('TCP') ? pkt.tcp_src : nil,
+              dst_port:   pkt.proto.include?('TCP') ? pkt.tcp_dst : nil
           end
         end
       else

@@ -5,17 +5,13 @@ class ConnectionTest < TestCase
 
   test 'fails with no source present' do
     assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :conn, :src => nil
+      Connection.create! :dst => IPIf.new
     end
-
-    assert !Fabricate.build(:conn, :src => nil).valid?
   end
 
   test 'fails with no target present' do
     assert_raises(ActiveRecord::RecordInvalid) do
-      Fabricate :conn, :dst => nil
+      Connection.create! :src => IPIf.new
     end
-
-    assert !Fabricate.build(:conn, :dst => nil).valid?
   end
 end

@@ -27,8 +27,11 @@ class CiscoIOSTest < TestCase
       end
     end
 
-    node = Fabricate :ipiface, :address => '10.0.2.1'
+    Antfarm.log :debug, 'CiscoIOSTest: creating dummy host in network'
+    Antfarm.store.ip_net_cf = 0.0
+    node = IPIf.create! certainty_factor: 0.0, address: '10.0.2.1', virtual: false
 
+    Antfarm.log :debug, 'CiscoIOSTest: calling cisco-ios plugin'
     opts = { :file => '/foo/bar/sucka' }
     Antfarm.plugins['cisco-ios'].run(opts)
 
@@ -40,11 +43,11 @@ class CiscoIOSTest < TestCase
     assert_equal 'InetRouter', device.name
     assert device.tags.map(&:name).include?('router')
 
-    device_ips = device.l3_ifs.map { |iface| iface.ip_if.address }
+    device_ips = device.ip_ifs.map { |iface| iface.address }
     assert device_ips.include?('10.0.1.1')
     assert device_ips.include?('10.0.2.254')
 
-    assert_equal 4, Antfarm::Models::L3Net.count
+    assert_equal 4, Antfarm::Models::IPNet.count
 
     assert Antfarm::Models::IPNet.network_addressed('10.0.1.0/24')
     assert Antfarm::Models::IPNet.network_addressed('10.0.2.0/24')

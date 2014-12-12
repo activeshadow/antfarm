@@ -103,10 +103,12 @@ module Antfarm
 
           interfaces.uniq!
 
+          Antfarm.log :debug, "CiscoIOS: creating node for #{hostname}"
           node = Antfarm::Models::Node.find_or_create_by!(
-            :name => hostname, :certainty_factor => Antfarm::CF_PROVEN_TRUE
+            name: hostname, certainty_factor: Antfarm::CF_PROVEN_TRUE
           )
 
+          Antfarm.log :debug, "CiscoIOS: creating tags for #{hostname}"
           node.tags.find_or_create_by name: 'router'
           node.tags.find_or_create_by name: 'Cisco'
           node.tags.find_or_create_by name: 'PIX'
@@ -122,14 +124,17 @@ module Antfarm
               Antfarm.output "  Found an existing interface with address #{address}."
               Antfarm.output '  Updating its associated node.'
 
-              node.merge_from(iface.l3_if.l2_if.node)
+              node.merge_from(iface.eth_if.node)
             else
-              node.l2_ifs.create(
-                :certainty_factor => Antfarm::CF_LIKELY_TRUE,
-                :l3_ifs_attributes => [{ :certainty_factor => Antfarm::CF_PROVEN_TRUE,
-                  :protocol => 'IP', :ip_if_attributes => { :address => address }
-                }]
-              )
+              Antfarm.log :debug, "CiscoIOS: creating new IPIf for #{address}"
+              Antfarm.store.eth_if_cf     = Antfarm::CF_LIKELY_TRUE
+              Antfarm.store.ip_if_cf      = Antfarm::CF_PROVEN_TRUE
+              Antfarm.store.ip_net_cf     = Antfarm::CF_PROVEN_TRUE
+              Antfarm.store.ip_if_address = address
+              Antfarm.store.ip_if_virtual = false
+
+              ethiface = node.eth_ifs.create!
+              ethiface.ip_ifs.create!
             end
           end
 
