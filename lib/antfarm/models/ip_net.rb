@@ -83,36 +83,22 @@ module Antfarm
         self.certainty_factor = Antfarm.clamp(self.certainty_factor)
       end
 
-      # Merge any sub-networks of this network into this network
-      #
-      # TODO: check to see if a larger network already exists... the current
-      # merge function will only check to see if there's any networks smaller
-      # than this one.
-      def merge(merge_certainty_factor = Antfarm::CF_LIKELY_TRUE)
+      # Merge any sub-networks of this network into this network. Given we're
+      # depending on PostgreSQL now to handle network detection and
+      # containment, this simply means destroying any sub-networks.
+      def merge
         Antfarm.log :info, "Merge called for #{self.address}"
-
         for sub_network in IPNet.networks_contained_within(self.address)
-          unless sub_network.address.eql?(self.address)
-            # TODO: update network's certainty factor using sub_network's
-            #       certainty factor.
-#           merge_certainty_factor = Antfarm.clamp(merge_certainty_factor)
-#           network.save!
-
-            # Because of :dependent => :destroy above, calling destroy here will
-            # also cause destroy to be called on ip_net
-            sub_network.destroy
-          end
+          sub_network.destroy unless sub_network.address.eql?(self.address)
         end
       end
 
-      # Find the IP network with the given address.
-      def self.network_addressed(ip_net)
-        # Calling network_containing here because if a network already exists
-        # that encompasses the given network, we want to automatically use that
-        # network instead.
-        #
-        # TODO: figure out how to use alias with class methods
-        self.network_containing(ip_net)
+      class << self
+        # Find the IP network with the given address.  Aliasing
+        # network_containing as network_addressed here because if a network
+        # already exists that encompasses the given network, we want to
+        # automatically use that network instead.
+        alias_method :network_addressed, :network_containing
       end
 
       # Find the IP network the given network is a sub_network of, if one
