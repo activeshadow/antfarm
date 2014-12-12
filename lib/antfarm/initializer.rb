@@ -98,9 +98,9 @@ module Antfarm
       end
     end
 
-    # Currently, SQLite3 and PostgreSQL databases are the only ones supported.
-    # The name of the ANTFARM environment (which defaults to 'antfarm') is the
-    # name used for the database file and the log file.
+    # Currently, only PostgreSQL is supported.  The name of the ANTFARM
+    # environment (which defaults to 'antfarm') is the name used for the
+    # database and the log files.
     def initialize_database
       begin
         config = YAML.load(IO.read(Antfarm::Helpers.config_file))
@@ -109,24 +109,23 @@ module Antfarm
       end
 
       # Database setup based on adapter specified
+      # TODO: support passing of URL for DB connection as well
       if config && config[@configuration.environment] and config[@configuration.environment].has_key?('adapter')
-        if config[@configuration.environment]['adapter'] == 'sqlite3'
-          config[@configuration.environment]['database'] = Antfarm::Helpers.db_file
-        elsif config[@configuration.environment]['adapter'] == 'postgresql'
-          config[@configuration.environment]['database'] = @configuration.environment
+        if config[@configuration.environment]['adapter']  == 'postgresql'
+          config[@configuration.environment]['database'] ||= @configuration.environment
         else
-          # If adapter specified isn't one of sqlite3 or postgresql,
-          # default to SQLite3 database configuration.
+          # If adapter specified isn't one of sqlite3 or postgresql, default to
+          # PostgreSQL database configuration.
           config = nil
         end
       else
-        # If the current environment configuration doesn't specify a
-        # database adapter, default to SQLite3 database configuration.
+        # If the current environment configuration doesn't specify a database
+        # adapter, default to PostgreSQL database configuration.
         config = nil
       end
 
-      # Default to SQLite3 database configuration
-      config ||= { @configuration.environment => { 'adapter' => 'sqlite3', 'database' => Antfarm::Helpers.db_file } }
+      # Default to PostgreSQL database configuration
+      config ||= { @configuration.environment => { 'adapter' => 'postgresql', 'database' => @configuration.environment } }
 
       ActiveRecord::Base.establish_connection(config[@configuration.environment])
     end
