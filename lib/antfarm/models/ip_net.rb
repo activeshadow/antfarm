@@ -93,20 +93,21 @@ module Antfarm
         end
       end
 
+      # Find the IP network the given network is a sub_network of, if one
+      # exists.
+      def self.network_containing(ip_net)
+        Antfarm.log :debug, "IPNet: checking to see if #{ip_net.inspect} exists..."
+        ip_net  = IPAddr.new(ip_net) if ip_net.is_a?(String)
+        ip_nets = IPNet.where("address >>= ?", ip_net.to_cidr_string)
+        return ip_nets.first # TODO: what if there's more than one?
+      end
+
       class << self
         # Find the IP network with the given address.  Aliasing
         # network_containing as network_addressed here because if a network
         # already exists that encompasses the given network, we want to
         # automatically use that network instead.
         alias_method :network_addressed, :network_containing
-      end
-
-      # Find the IP network the given network is a sub_network of, if one
-      # exists.
-      def self.network_containing(ip_net)
-        ip_net  = IPAddr.new(ip_net) if ip_net.is_a?(String)
-        ip_nets = IPNet.where("address >>= ?", ip_net.to_cidr_string)
-        return ip_nets.first # TODO: what if there's more than one?
       end
 
       # Find any IP networks that are sub_networks of the given network.
