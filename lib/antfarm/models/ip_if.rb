@@ -121,16 +121,20 @@ module Antfarm
       # the IP address provided for this IP Interface model unless one already
       # exists.
       def create_ip_net
-        # prefix will be 32 if no subnet data was provided
-        # Antfarm.config.prefix defaults to 30, but may be changed by user
-        @prefix = Antfarm.config.prefix if @prefix == 32
+        if @prefix == 32 # no subnet data provided
+          # Antfarm.config.prefix defaults to 30, but may be changed by user
+          @prefix = Antfarm.config.prefix if @prefix == 32
+          ip_net_cf = Antfarm::CF_LIKELY_FALSE
+        else
+          ip_net_cf = Antfarm::CF_PROVEN_TRUE
+        end
 
         Antfarm.log :debug, "IPIf: Creating #{self.address}/#{@prefix}"
 
         # rescue this call just in case a network containing this new network
         # already exists
         begin
-          IPNet.create! address: "#{self.address}/#{@prefix}"
+          IPNet.create! certainty_factor: ip_net_cf, address: "#{self.address}/#{@prefix}"
           Antfarm.log :info, 'IPIf: Created Layer 3 Network'
         rescue
           Antfarm.log :warn, 'IPIf: Layer 3 Network already exists'
