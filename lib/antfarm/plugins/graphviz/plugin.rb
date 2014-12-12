@@ -25,7 +25,7 @@ module Antfarm
       check_options(opts)
 
       n = Hash.new
-      g = ::GraphViz.new(:G, type: :digraph)
+      g = ::GraphViz.new(:G, type: :graph)
       g.node[:shape] = 'box'
       g.edge[:dir]   = 'none'
 
@@ -34,10 +34,10 @@ module Antfarm
       end
 
       Antfarm::Models::IPIf.all.each do |iface|
-        node    = g.add_nodes(iface.address.to_s, color: 'green', label: "#{iface.address.to_s}\n\nVLAN 100\nVLAN 200")
+        node    = g.add_nodes(iface.address.to_s, color: 'green', label: "#{iface.address.to_s}")
         network = iface.network
 
-        g.add_edges(n[network.id], node, label: 'deny') if network
+        g.add_edges(n[network.id], node, label: 'TCP') if network
       end
 
       g.output(png: opts[:file_name])
