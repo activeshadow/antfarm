@@ -96,19 +96,6 @@ module Antfarm
     end
   end
 
-  # Allow certainty factor provided to be nil just in case this call is part of
-  # a loop that may or may not need to change the certainty factor.
-  def self.execute_with_certainty_factor(certainty_factor = nil, &block)
-    if certainty_factor.nil?
-      yield
-    else
-      original_certainty_factor = Antfarm.config.certainty_factor
-      Antfarm.config.certainty_factor = certainty_factor.to_f
-      yield
-      Antfarm.config.certainty_factor = original_certainty_factor
-    end
-  end
-
   module Helpers
     def self.db_dir
       return File.expand_path("#{self.user_dir}/db")

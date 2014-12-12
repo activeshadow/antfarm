@@ -89,7 +89,7 @@ module Antfarm
       # TODO: check to see if a larger network already exists... the current
       # merge function will only check to see if there's any networks smaller
       # than this one.
-      def merge(merge_certainty_factor = Antfarm.config.certainty_factor)
+      def merge(merge_certainty_factor = Antfarm::CF_LIKELY_TRUE)
         Antfarm.log :info, "Merge called for #{self.address}"
 
         for sub_network in IPNet.networks_contained_within(self.address)
