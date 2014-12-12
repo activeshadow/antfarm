@@ -106,6 +106,9 @@ module Antfarm
         unless Antfarm.store.ip_if_virtual.nil?
           self.virtual ||= Antfarm.store.ip_if_virtual
         end
+
+        # this tripped me up for a friggin' day!!! :-(
+        return true
       end
 
       def clamp_certainty_factor
@@ -126,6 +129,8 @@ module Antfarm
             certainty_factor = Antfarm::CF_PROVEN_TRUE
           end
 
+          Antfarm.log :debug, "IPIf: Creating #{self.address}/#{@prefix}"
+          Antfarm.log :debug, "IPIf: #{IPNet.all.map(&:address)}"
           IPNet.create! address: "#{self.address}/#{@prefix}"
           Antfarm.log :info, 'IPIf: Created Layer 3 Network'
         end

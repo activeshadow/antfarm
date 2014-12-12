@@ -48,6 +48,12 @@ module Antfarm
       # occur on anything saved to the database at any time, including a create
       # and an update.
       validates_each :address do |record, attr, value|
+        Antfarm.log :debug, 'IPNet: nil value for address' if value.nil?
+
+        unless value.nil?
+          Antfarm.log :debug, "IPNet: validating address #{value.to_cidr_string}"
+        end
+
         # Don't save the network if it's a loopback network.
         if value and value.loopback?
           record.errors.add(:address, "loopback address not allowed")
@@ -59,13 +65,19 @@ module Antfarm
       #######
 
       def set_attributes_from_store
+        Antfarm.log :debug, 'IPNet: setting attributes'
+
         unless Antfarm.store.ip_net_cf.nil?
           self.certainty_factor ||= Antfarm.store.ip_net_cf
+          Antfarm.log :debug, "IPNet: CF set to #{self.certainty_factor}"
         end
 
         unless Antfarm.store.ip_net_address.nil?
           self.address ||= Antfarm.store.ip_net_address
+          Antfarm.log :debug, "IPNet: address set to #{self.address}"
         end
+
+        return true
       end
 
       def clamp_certainty_factor

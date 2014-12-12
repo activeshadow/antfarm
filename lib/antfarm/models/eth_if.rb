@@ -60,6 +60,8 @@ module Antfarm
         unless Antfarm.store.eth_if_address.nil?
           self.address ||= Antfarm.store.eth_if_address
         end
+
+        return true
       end
 
       def clamp_certainty_factor

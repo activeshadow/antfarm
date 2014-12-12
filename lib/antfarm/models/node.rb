@@ -65,6 +65,8 @@ module Antfarm
         unless Antfarm.store.node_cf.nil?
           self.device_type ||= Antfarm.store.node_device_type
         end
+
+        return true
       end
 
       def clamp_certainty_factor
