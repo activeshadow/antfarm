@@ -36,6 +36,9 @@ module Antfarm
       has_many   :ip_ifs, class_name: 'IPIf', dependent: :destroy
       belongs_to :node
 
+      accepts_nested_attributes_for :ip_ifs
+      accepts_nested_attributes_for :node
+
       before_validation :set_attributes_from_store
 
       validates   :certainty_factor, presence:    true

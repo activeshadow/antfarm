@@ -57,6 +57,8 @@ module Antfarm
       has_many   :tags, as: :taggable
       belongs_to :eth_if
 
+      accepts_nested_attributes_for :eth_if
+
       before_validation :set_attributes_from_store
 
       validates    :certainty_factor, presence:   true
