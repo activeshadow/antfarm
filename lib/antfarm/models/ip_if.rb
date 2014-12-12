@@ -100,14 +100,8 @@ module Antfarm
 
         Antfarm.log :debug, "IPIf: Creating #{self.address}/#{@prefix}"
 
-        # rescue this call just in case a network containing this new network
-        # already exists
-        begin
-          IPNet.create! certainty_factor: ip_net_cf, address: "#{self.address}/#{@prefix}"
-          Antfarm.log :info, 'IPIf: Created Layer 3 Network'
-        rescue
-          Antfarm.log :warn, 'IPIf: Layer 3 Network already exists'
-        end
+        IPNet.create! certainty_factor: ip_net_cf, address: "#{self.address}/#{@prefix}"
+        Antfarm.log :info, 'IPIf: Created Layer 3 Network'
       end
     end
   end

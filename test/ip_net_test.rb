@@ -27,11 +27,20 @@ class IPNetTest < TestCase
     end
   end
 
-  test 'detects if a larger IP network already exists when creating' do
-    IPNet.create! certainty_factor: 1.0, address: '192.168.1.0/24'
+  test 'correctly merges networks after a new network is created' do
+    IPNet.create! certainty_factor: 0.0, address: '192.168.1.0/24'
+    assert_equal 1, IPNet.count
 
-    assert_raises(ActiveRecord::RecordInvalid) do
-      IPNet.create! certainty_factor: 1.0, address: '192.168.1.32/27'
-    end
+    IPNet.create! certainty_factor: 1.0, address: '192.168.1.0/27'
+    assert_equal 1, IPNet.count
+    assert_equal '192.168.1.0/27', IPNet.first.address.to_cidr_string
+
+    IPNet.create! certainty_factor: -0.5, address: '192.168.1.0/30'
+    assert_equal 1, IPNet.count
+    assert_equal '192.168.1.0/27', IPNet.first.address.to_cidr_string
+
+    IPNet.create! certainty_factor: 1.0, address: '192.168.1.0/24'
+    assert_equal 1, IPNet.count
+    assert_equal '192.168.1.0/24', IPNet.first.address.to_cidr_string
   end
 end

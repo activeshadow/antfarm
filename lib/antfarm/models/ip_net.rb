@@ -21,11 +21,6 @@ module Antfarm
         if value and value.loopback?
           record.errors.add(:address, 'loopback address not allowed')
         end
-
-        # Don't save the network if a larger one already exists.
-        if value and IPNet.network_containing(value)
-          record.errors.add(:address, 'larger network that contains this network already exists')
-        end
       end
 
       #######
@@ -57,8 +52,27 @@ module Antfarm
       # containment, this simply means destroying any sub-networks.
       def merge
         Antfarm.log :info, "Merge called for #{self.address}"
-        for sub_network in IPNet.networks_contained_within(self.address)
-          sub_network.destroy unless sub_network.address.eql?(self.address)
+
+        # a network already exists that contains this network...
+        if parent = IPNet.network_containing(self.address)
+          unless parent.address.eql?(self.address)
+            if parent.certainty_factor >= self.certainty_factor
+              self.destroy
+            else
+              parent.destroy
+            end
+          end
+        end
+
+        # networks exist that this network contains...
+        for child in IPNet.networks_contained_within(self.address)
+          unless child.address.eql?(self.address)
+            if self.certainty_factor >= child.certainty_factor
+              child.destroy
+            else
+              self.destroy
+            end
+          end
         end
       end
 
