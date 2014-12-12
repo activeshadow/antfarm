@@ -45,4 +45,27 @@ class NodeTest < TestCase
       Node.create! name: 'foobar'
     end
   end
+
+  test 'allows nested attributes for eth_if to be provided' do
+    node = Node.create(
+      certainty_factor: 0.0, name: 'foobar', device_type: 'PC',
+      eth_ifs_attributes: [{ certainty_factor: 0.3, address: '00:11:22:33:44:55' }]
+    )
+
+    assert node
+    assert_equal 0.3, node.eth_ifs.first.certainty_factor
+    assert_equal '00:11:22:33:44:55', node.eth_ifs.first.address
+  end
+
+  test 'allows nested attributes for ip_if to be provided' do
+    node = Node.create(
+      certainty_factor: 0.0, name: 'foobar', device_type: 'PC',
+      ip_ifs_attributes: [{ certainty_factor: 0.4, address: '192.168.1.11' }]
+    )
+
+    assert node
+    assert_equal 0.4, node.ip_ifs.first.certainty_factor
+    assert_equal '192.168.1.11', node.ip_ifs.first.address.to_s
+    assert_nil   node.ip_ifs.first.eth_if
+  end
 end

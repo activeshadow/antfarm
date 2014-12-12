@@ -11,7 +11,7 @@ require 'antfarm'
 Antfarm::Initializer.run do |config|
   config.environment = 'test'
   config.log_level   = 'debug'
-  config.outputter   = lambda { |msg| File.open('/tmp/antfarm.out', 'w+') { |f| f.puts msg } }
+  config.outputter   = lambda { |msg| File.open('/tmp/antfarm.out', 'w+') { |f| f.puts msg.join("\n") } }
 end
 
 require 'minitest/autorun'
