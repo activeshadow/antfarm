@@ -118,6 +118,10 @@ module Antfarm
       return File.expand_path("#{self.db_dir}/#{Antfarm.env}.db")
     end
 
+    def self.db_log_file
+      return File.expand_path("#{self.db_dir}/#{Antfarm.env}.log")
+    end
+
     def self.log_dir
       return File.expand_path("#{self.user_dir}/log")
     end

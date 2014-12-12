@@ -171,10 +171,12 @@ module Antfarm
     end
 
     def initialize_logger
+      db_logger       = ::Logger.new(Antfarm::Helpers.db_log_file)
+      db_logger.level = ::Logger.const_get(@configuration.log_level.upcase)
+      ActiveRecord::Base.logger = db_logger
+
       logger       = ::Logger.new(Antfarm::Helpers.log_file)
       logger.level = ::Logger.const_get(@configuration.log_level.upcase)
-
-      ActiveRecord::Base.logger = logger
       Antfarm.logger_callback = lambda do |severity,msg|
         logger.send(severity,msg.join)
       end
